@@ -1,18 +1,19 @@
-// 比較表の行をスクロールで1行ずつ表示（画像なし版 2026-11-12）
-// 動き低減設定・IntersectionObserver非対応のときは最初から全部表示する。
-(function () {
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduce || !('IntersectionObserver' in window)) return;
-  document.documentElement.classList.add('js');
-  var rows = document.querySelectorAll('.reveal');
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (e) {
-      if (!e.isIntersecting) return;
-      var i = Array.prototype.indexOf.call(rows, e.target);
-      e.target.style.transitionDelay = (Math.max(0, i) * 0.12) + 's';
-      e.target.classList.add('is-in');
-      io.unobserve(e.target);
-    });
-  }, { rootMargin: '0px 0px -10% 0px', threshold: 0.2 });
-  rows.forEach(function (r) { io.observe(r); });
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rows = document.querySelectorAll('.reveal tbody tr');
+  if (reduce || !('IntersectionObserver' in window)) rows.forEach(r => r.classList.add('in'));
+  else {
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting) { const i = [...rows].indexOf(e.target); setTimeout(() => e.target.classList.add('in'), i * 90); io.unobserve(e.target); }
+    }), { threshold: .2 });
+    rows.forEach(r => io.observe(r));
+  }
+  const dock = document.querySelector('.dock'), fv = document.getElementById('fv'), last = document.getElementById('cta');
+  const upd = () => {
+    const pastFv = fv.getBoundingClientRect().bottom < 0;
+    const r = last.getBoundingClientRect();
+    const atCta = r.top < innerHeight && r.bottom > 0;
+    dock.classList.toggle('show', pastFv && !atCta);
+  };
+  addEventListener('scroll', upd, { passive: true }); upd();
 })();
